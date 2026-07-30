@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-const sessionCookie = "retriv_session"
+const sessionCookie = "session"
 
 type ctxKey int
 

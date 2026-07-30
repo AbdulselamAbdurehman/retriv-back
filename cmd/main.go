@@ -68,7 +68,7 @@ func run() error {
 	channelRepo := channel.NewRepo(pool)
 
 	// Services. Dependencies flow inward; cross-service wiring uses interfaces.
-	mailer := notify.NewSMTPMailer(cfg.SMTPAddr, cfg.SMTPFrom)
+	mailer := notify.NewSMTPMailer(cfg.MailHost, cfg.MailPort, cfg.MailUsername, cfg.MailPassword, cfg.MailFrom)
 	notifySvc := notify.NewService(notifyRepo, mailer, authRepo)
 
 	sessions := auth.NewSessionManager(cfg.SessionSecret, sessionTTL)

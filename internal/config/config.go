@@ -18,8 +18,12 @@ type Config struct {
 	OllamaEmbedModel string
 	OllamaChatModel  string
 
-	SMTPAddr string // host:port
-	SMTPFrom string
+	// SMTP (real relay, e.g. Gmail). Username/password enable authenticated send.
+	MailHost     string
+	MailPort     string
+	MailUsername string
+	MailPassword string
+	MailFrom     string
 
 	// EncKey decrypts finder verification details (32 bytes, base64-encoded in env).
 	EncKeyB64 string
@@ -45,31 +49,34 @@ type Config struct {
 // Secrets (DB URL, encryption key, session secret) are required and error if unset.
 func Load() (Config, error) {
 	c := Config{
-		HTTPAddr:               getenv("RETRIV_HTTP_ADDR", ":8080"),
-		AppBaseURL:             getenv("RETRIV_APP_BASE_URL", "http://localhost:5173"),
-		OllamaBaseURL:          getenv("RETRIV_OLLAMA_URL", "http://localhost:11434"),
-		OllamaEmbedModel:       getenv("RETRIV_OLLAMA_EMBED_MODEL", "nomic-embed-text"),
-		OllamaChatModel:        getenv("RETRIV_OLLAMA_CHAT_MODEL", "llama3.1"),
-		SMTPAddr:               getenv("RETRIV_SMTP_ADDR", "localhost:1025"),
-		SMTPFrom:               getenv("RETRIV_SMTP_FROM", "no-reply@retriv.local"),
-		MatchRadiusMeters:      getfloat("RETRIV_MATCH_RADIUS_METERS", 5000),
-		MatchTimeWindow:        getdur("RETRIV_MATCH_TIME_WINDOW", 14*24*time.Hour),
-		MatchMaxCosineDistance: getfloat("RETRIV_MATCH_MAX_COSINE_DISTANCE", 0.35),
-		MatchCandidateLimit:    getint("RETRIV_MATCH_CANDIDATE_LIMIT", 5),
-		MinConfidence:          getfloat("RETRIV_MIN_CONFIDENCE", 0.7),
-		MaxVerifyAttempts:      getint("RETRIV_MAX_VERIFY_ATTEMPTS", 3),
-		LostReportsPerDay:      getint("RETRIV_LOST_REPORTS_PER_DAY", 2),
-		ReportTTL:              getdur("RETRIV_REPORT_TTL", 30*24*time.Hour),
+		HTTPAddr:               getenv("HTTP_ADDR", ":8080"),
+		AppBaseURL:             getenv("APP_BASE_URL", "http://localhost:5173"),
+		OllamaBaseURL:          getenv("OLLAMA_URL", "http://localhost:11434"),
+		OllamaEmbedModel:       getenv("OLLAMA_EMBED_MODEL", "nomic-embed-text"),
+		OllamaChatModel:        getenv("OLLAMA_CHAT_MODEL", "llama3.2:1b"),
+		MailHost:               getenv("MAIL_HOST", "smtp.gmail.com"),
+		MailPort:               getenv("MAIL_PORT", "587"),
+		MailUsername:           os.Getenv("MAIL_USERNAME"),
+		MailPassword:           os.Getenv("MAIL_PASSWORD"),
+		MailFrom:               getenv("MAIL_FROM", ""),
+		MatchRadiusMeters:      getfloat("MATCH_RADIUS_METERS", 5000),
+		MatchTimeWindow:        getdur("MATCH_TIME_WINDOW", 14*24*time.Hour),
+		MatchMaxCosineDistance: getfloat("MATCH_MAX_COSINE_DISTANCE", 0.35),
+		MatchCandidateLimit:    getint("MATCH_CANDIDATE_LIMIT", 5),
+		MinConfidence:          getfloat("MIN_CONFIDENCE", 0.7),
+		MaxVerifyAttempts:      getint("MAX_VERIFY_ATTEMPTS", 3),
+		LostReportsPerDay:      getint("LOST_REPORTS_PER_DAY", 2),
+		ReportTTL:              getdur("REPORT_TTL", 30*24*time.Hour),
 	}
 
 	var err error
-	if c.DatabaseURL, err = required("RETRIV_DATABASE_URL"); err != nil {
+	if c.DatabaseURL, err = required("DATABASE_URL"); err != nil {
 		return Config{}, err
 	}
-	if c.EncKeyB64, err = required("RETRIV_ENC_KEY"); err != nil {
+	if c.EncKeyB64, err = required("ENC_KEY"); err != nil {
 		return Config{}, err
 	}
-	if c.SessionSecret, err = required("RETRIV_SESSION_SECRET"); err != nil {
+	if c.SessionSecret, err = required("SESSION_SECRET"); err != nil {
 		return Config{}, err
 	}
 	return c, nil
